@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="888" height="666" style="border:1px solid red"></canvas>
+    <canvas id="canvas2" width="888" height="666" style="border:1px solid red; position: relative; left: -896px;"></canvas>
+</body>
+
+</html>
+<script type="text/javascript" src='../jquery-1.12.2.min.js'></script>
+<script type="text/javascript">
+    var canvas = document.getElementById('canvas');
+    //colors需要在某个方法中使用，但是没有必要作为参数，用闭包保护colors
+    var colors = (function () {
+        return ( "aliceblue,antiquewhite,aqua,aquamarine,azure,beige,bisque,black,blanchedalmond,blue," +
+        "blueviolet,brown,burlywood,cadetblue,chartreuse,chocolate,coral,cornflowerblue,cornsilk," +
+        "crimson,cyan,darkblue,darkcyan,darkgoldenrod,darkgray,darkgreen,darkgrey,darkkhaki,darkmagenta," +
+        "darkolivegreen,darkorange,darkorchid,darkred,darksalmon,darkseagreen,darkslateblue,darkslategray," +
+        "darkslategrey,darkturquoise,darkviolet,deeppink,deepskyblue,dimgray,dimgrey,dodgerblue,firebrick," +
+        "floralwhite,forestgreen,fuchsia,gainsboro,ghostwhite,gold,goldenrod,gray,green,greenyellow,grey," +
+        "honeydew,hotpink,indianred,indigo,ivory,khaki,lavender,lavenderblush,lawngreen,lemonchiffon," +
+        "lightblue,lightcoral,lightcyan,lightgoldenrodyellow,lightgray,lightgreen,lightgrey,lightpink," +
+        "lightsalmon,lightseagreen,lightskyblue,lightslategray,lightslategrey,lightsteelblue,lightyellow," +
+        "lime,limegreen,linen,magenta,maroon,mediumaquamarine,mediumblue,mediumorchid,mediumpurple," +
+        "mediumseagreen,mediumslateblue,mediumspringgreen,mediumturquoise,mediumvioletred,midnightblue," +
+        "mintcream,mistyrose,moccasin,navajowhite,navy,oldlace,olive,olivedrab,orange,orangered,orchid," +
+        "palegoldenrod,palegreen,paleturquoise,palevioletred,papayawhip,peachpuff,peru,pink,plum,powderblue," +
+        "purple,rebeccapurple,red,rosybrown,royalblue,saddlebrown,salmon,sandybrown,seagreen,seashell,sienna," +
+        "silver,skyblue,slateblue,slategray,slategrey,snow,springgreen,steelblue,tan,teal,thistle,transparent," +
+        "tomato,turquoise,violet,wheat,white,whitesmoke,yellow,yellowgreen" ).split(',');
+    })();
+
+
+    function Chain(opt) {
+        if(!opt) throw new Error('请提供参数');
+
+        var requireArgs = 'bigX,bigY,canvas'.split(',');
+        requireArgs.forEach(function(v){
+            if(!opt.hasOwnProperty(v)) throw new Error('请传人必填参数属性：' + v);
+        });
+
+        var defaultOpt = {
+            bigRadius: 200,
+            smallRadius: 20,
+            startRadian: 0,
+            bigColor:'black',
+            isAnticlockwise:false
+        }
+        for(var key in defaultOpt){
+            this[key] = defaultOpt[key];
+        }
+
+        // 用forin循环，把opt中的key赋值给this
+        for (var key in opt) {
+            this[key] = opt[key]
+        }
+        this.ctx = this.canvas.getContext('2d');
+
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.font = '20px Consolas';
+
+        this.init();
+    }
+
+    // 原型
+    Chain.prototype = {
+        constructor: chain,
+        init: function () {
+            var self = this;
+            var timer = setInterval(function(){
+                self.ctx.clearRect(0,0,self.canvas.width,self.canvas.height);
+
+                if(self.isAnticlockwise){
+                    self.startRadian -= 0.01*Math.PI;
+                }else{
+                    self.startRadian += 0.01*Math.PI;
+                }
+                
+                self.drawBigCircle();
+                self.drawSmallCircles();
+            },100);
+
+            
+        
+        },
+        // 绘制大圆
+        drawBigCircle: function () {
+            var ctx = this.ctx;
+            ctx.beginPath();
+            ctx.strokeStyle = this.bigColor;
+            ctx.arc(this.bigX, this.bigY, this.bigRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+        },
+        // 绘制小圆
+        drawSmallCircles: function () {
+            for (var i = 0; i < this.data.length; i++) {
+                // 小圆的圆心距离大圆的弧度值、
+                var radian = this.startRadian + i * 2 * Math.PI / this.data.length;
+          
+                var color = colors[i + 85];
+                var text = this.data[i];
+
+                this.drawSingleSmallCircle(radian,color,text);
+               
+            }
+        },
+
+        drawSingleSmallCircle:function(radian,color,text){
+            var ctx = this.ctx;
+             // 小圆的底和高
+                var h = this.bigRadius * Math.sin(radian);
+                var b = this.bigRadius * Math.cos(radian);
+                // 小圆的坐标、
+                var x = this.bigX + b;
+                var y = this.bigY + h;
+
+                ctx.beginPath();
+                ctx.fillStyle = color;
+                ctx.arc(x, y, this.smallRadius, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = 'white';
+                ctx.fillText(text,x,y);
+        }
+    }
+    var chain = new Chain({
+        // 大圆的圆心
+        bigX: 300,
+        bigY: 300,
+        bigRadius: 200,
+        // 小圆的半径
+        smallRadius: 60,
+        // 第一个小圆的起始位置
+        startRadian: -0.5 * Math.PI,
+        bigColor:'blue',
+        isAnticlockwise:true,
+        canvas: canvas,
+        data:['web前端','PHP','全栈工程师','UI设计','JavaEE','IOS','安卓Android']
+    });
+
+    var chain = new Chain({
+        bigX:300,
+        bigY:300,
+        bigRadius:100,
+        smallRadius:30,
+        startRadian:0,
+        canvas:document.getElementById('canvas2'),
+        bigColor:'red',
+        isAnticlockwise:false,
+        data:['HTML','CSS','JS','JSON','Ajax','jQuery','VUE']
+        
+    })
+</script>
