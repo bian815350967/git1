@@ -1,3 +1,5 @@
 网易云音乐API
 https://neteasecloudmusicapi.vercel.app/#/?id=neteasecloudmusicapi 
 
+QQ音乐
+https://jsososo.github.io/QQMusicApi/#/?id=qqmusicapi
